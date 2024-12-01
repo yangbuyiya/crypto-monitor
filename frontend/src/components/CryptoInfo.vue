@@ -30,7 +30,7 @@
 
 <style scoped>
 	.crypto-info {
-		background-color: #242424;
+		background-color: #13191d;
 		border-radius: 8px;
 		padding: 10px;
 		margin: 5px;

@@ -1,6 +1,6 @@
 <template>
 	<div class="button-container">
-		<button class="icon-button" @click="handleClick" aria-label="add">
+		<button class="icon-button" @click="handleEditPair" aria-label="add">
 			<FontAwesomeIcon icon="fa-solid fa-plus" />
 		</button>
 		<button class="icon-button" @click="hideWindow" aria-label="hide">
@@ -16,9 +16,11 @@
 			<FontAwesomeIcon icon="fa-solid fa-xmark" />
 		</button>
 	</div>
+	<AddCryptoPair v-if="showAddPair" />
 </template>
 
 <script setup>
+	import AddCryptoPair from "./AddCryptoPair.vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { ref } from "vue";
 	import {
@@ -26,11 +28,17 @@
 		WindowMinimise,
 		Quit,
 	} from "../../wailsjs/runtime/runtime";
+	import { defineEmits } from "vue";
 
 	const isKeepOnTop = ref(false);
+	const showAddPair = ref(false);
 
-	function handleClick() {
-		console.log("Button clicked");
+	// 定义事件发射
+	const emit = defineEmits(["toggle-add-pair"]);
+
+	function handleEditPair() {
+		showAddPair.value = !showAddPair.value;
+		emit("toggle-add-pair");
 	}
 
 	const hideWindow = () => {

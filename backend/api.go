@@ -1,18 +1,19 @@
 package backend
 
 import (
+	"fmt"
 	"regexp"
 
 	"github.com/iaping/go-okx/ws/public"
 )
 
-func GetCryptoPairListener(cryptoPair string) <-chan public.EventTickers {
+func GetCryptoPairListener(cryptoPair string) (<-chan public.EventTickers, error) {
 	match, err := regexp.MatchString("^[A-Z]+-[A-Z]+$", cryptoPair)
 	if err != nil {
-		panic(err)
+		return nil, fmt.Errorf("cryptoPair format error: %w", err)
 	}
 	if !match {
-		panic("cryptoPair is not in the correct format. a correct example is BTC-USDT")
+		return nil, fmt.Errorf("cryptoPair format error, correct example is BTC-USDT")
 	}
 
 	tickerChan := make(chan public.EventTickers)
@@ -22,12 +23,13 @@ func GetCryptoPairListener(cryptoPair string) <-chan public.EventTickers {
 	}
 
 	handlerError := func(err error) {
-		panic(err)
+		fmt.Printf("SubscribeTickers error: %v\n", err)
+		close(tickerChan)
 	}
 
 	if err := public.SubscribeTickers(cryptoPair, handler, handlerError, false); err != nil {
-		panic(err)
+		return nil, fmt.Errorf("SubscribeTickers failed: %w", err)
 	}
 
-	return tickerChan
+	return tickerChan, nil
 }

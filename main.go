@@ -18,7 +18,7 @@ func main() {
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "crypto-monitor",
-		Width:  150,
+		Width:  160,
 		Height: 300,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
