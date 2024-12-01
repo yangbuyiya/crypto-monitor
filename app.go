@@ -25,9 +25,6 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 
-	// 设置窗口始终在最前
-	runtime.WindowSetAlwaysOnTop(ctx, true)
-
 	go a.subscribeCryptoPrices()
 }
 

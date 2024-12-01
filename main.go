@@ -18,7 +18,7 @@ func main() {
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "crypto-monitor",
-		Width:  180,
+		Width:  150,
 		Height: 300,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
@@ -28,6 +28,7 @@ func main() {
 		Bind: []interface{}{
 			app,
 		},
+		Frameless: true,
 	})
 
 	if err != nil {
