@@ -1,10 +1,10 @@
 <script setup>
-	import CryptoInfoContainer from "./components/CryptoInfoContainer.vue";
+	import Home from "./views/Home.vue";
 </script>
 
 <template>
 	<div id="app">
-		<CryptoInfoContainer />
+		<Home />
 	</div>
 </template>
 
