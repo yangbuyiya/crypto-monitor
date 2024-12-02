@@ -6,6 +6,7 @@
 				:pair="pair"
 				:price="prices[pair] || 'Loading...'"
 				:color="colors[pair] || '#FFFFFF'"
+				:trend="trend[pair] || ''"
 				@dblclick="handleDoubleClick(pair)" />
 			<FontAwesomeIcon
 				icon="fa-solid fa-xmark"
@@ -39,6 +40,7 @@
 	const pairs = ref([]);
 	const prices = ref({});
 	const colors = ref({});
+	const trend = ref({});
 	const lastAverage = ref({});
 	const period = ref(60);
 
@@ -87,6 +89,9 @@
 			// adjust color by price
 			const hue = currentPrice > avgPrice ? 150 : 0; // 150 -> green, 0 -> red
 			colors.value[data.pair] = `hsl(${hue}, 50%, ${brightness}%)`;
+
+			trend.value[data.pair] =
+				currentPrice > avgPrice ? "↑" : currentPrice < avgPrice ? "↓" : "";
 		});
 
 		EventsOn("crypto_pairs_changed", () => {

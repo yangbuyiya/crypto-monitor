@@ -1,7 +1,7 @@
 <template>
 	<div class="crypto-info">
 		<div :style="{ color: color }">{{ pair }}</div>
-		<div :style="{ color: color }">{{ price }}</div>
+		<div :style="{ color: color }">{{ price }} {{ trend }}</div>
 	</div>
 </template>
 
@@ -20,6 +20,10 @@
 		color: {
 			type: String,
 			default: "#000000",
+		},
+		trend: {
+			type: String,
+			default: "",
 		},
 	});
 
