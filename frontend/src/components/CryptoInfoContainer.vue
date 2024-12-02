@@ -44,10 +44,75 @@
 	const lastAverage = ref({});
 	const period = ref(60);
 
+	// max difference ratio (50%)
+	const maxDiffRatio = 0.5;
+
+	const calculateColor = (difference, avgPrice) => {
+		const ratio =
+			Math.min(Math.abs(difference / avgPrice), maxDiffRatio) / maxDiffRatio; // 0 到 1
+		let r, g, b;
+		let lightness = 40 + ratio * 30; // lightness from 40% to 80%
+
+		if (difference > 0) {
+			// white -> green
+			r = Math.round(255 * (1 - ratio));
+			g = 255;
+			b = Math.round(255 * (1 - ratio));
+		} else if (difference < 0) {
+			// red -> white
+			r = 255;
+			g = Math.round(255 * (1 - ratio));
+			b = Math.round(255 * (1 - ratio));
+		} else {
+			// equal -> white
+			r = 255;
+			g = 255;
+			b = 255;
+		}
+
+		// convert to HSL to adjust lightness
+		const rgbToHsl = (r, g, b) => {
+			r /= 255;
+			g /= 255;
+			b /= 255;
+			const max = Math.max(r, g, b);
+			const min = Math.min(r, g, b);
+			let h,
+				s,
+				l = (max + min) / 2;
+
+			if (max === min) {
+				h = s = 0; // achromatic
+			} else {
+				const d = max - min;
+				s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+				switch (max) {
+					case r:
+						h = (g - b) / d + (g < b ? 6 : 0);
+						break;
+					case g:
+						h = (b - r) / d + 2;
+						break;
+					case b:
+						h = (r - g) / d + 4;
+						break;
+				}
+				h /= 6;
+			}
+			return [h * 360, s * 100, l * 100];
+		};
+
+		[, , lightness] = rgbToHsl(r, g, b);
+		// limit lightness between 50% and 80%
+		lightness = Math.min(Math.max(lightness, 50), 80);
+
+		return `hsl(${difference > 0 ? 120 : 0}, 100%, ${lightness}%)`;
+	};
+
 	const loadPairsFromStorage = () => {
 		const storedPairs = JSON.parse(localStorage.getItem("cryptoPairs")) || [];
 		pairs.value = storedPairs;
-		EventsEmit("listen_crypto_pairs", storedPairs); // 通知后端监听这些币种
+		EventsEmit("listen_crypto_pairs", storedPairs);
 	};
 
 	const handleDoubleClick = (pair) => {
@@ -74,24 +139,25 @@
 
 			prices.value[data.pair] = data.price;
 			lastAverage.value[data.pair] =
-				(parseFloat(lastAverage.value[data.pair] || 0) * (period.value - 1) +
+				(parseFloat(lastAverage.value[data.pair] || period.value) *
+					(period.value - 1) +
 					parseFloat(data.price)) /
 				period.value;
 
 			// diff between current price and average price
 			const currentPrice = parseFloat(data.price);
 			const avgPrice = lastAverage.value[data.pair];
-			const diffPercent =
-				Math.abs((currentPrice - avgPrice) / avgPrice) * 100 * 50;
+			const difference = currentPrice - avgPrice;
 
-			const brightness = Math.min(Math.max(diffPercent, 40), 100); // 将最低亮度提高到40
+			colors.value[data.pair] = calculateColor(difference, avgPrice);
 
-			// adjust color by price
-			const hue = currentPrice > avgPrice ? 150 : 0; // 150 -> green, 0 -> red
-			colors.value[data.pair] = `hsl(${hue}, 50%, ${brightness}%)`;
-
-			trend.value[data.pair] =
-				currentPrice > avgPrice ? "↑" : currentPrice < avgPrice ? "↓" : "";
+			if (difference > 0) {
+				trend.value[data.pair] = "↑";
+			} else if (difference < 0) {
+				trend.value[data.pair] = "↓";
+			} else {
+				trend.value[data.pair] = "";
+			}
 		});
 
 		EventsOn("crypto_pairs_changed", () => {
