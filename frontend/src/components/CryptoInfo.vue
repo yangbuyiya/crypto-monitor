@@ -33,9 +33,9 @@
 	});
 
 	const cryptoIconURL = computed(() => {
-		return `/okx/cdn/oksupport/asset/currency/icon/${props.pair
+		return `https://cdn.jsdelivr.net/gh/vadimmalykhin/binance-icons/crypto/${props.pair
 			.split("-")[0]
-			.toLowerCase()}.png`;
+			.toLowerCase()}.svg`;
 	});
 
 	const color = computed(() => {
