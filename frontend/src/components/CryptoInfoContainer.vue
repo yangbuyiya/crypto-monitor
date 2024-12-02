@@ -75,12 +75,18 @@
 				(parseFloat(lastAverage.value[data.pair] || 0) * (period.value - 1) +
 					parseFloat(data.price)) /
 				period.value;
-			colors.value[data.pair] =
-				lastAverage.value[data.pair] > parseFloat(data.price)
-					? "#6E9E84"
-					: lastAverage.value[data.pair] < parseFloat(data.price)
-					? "#C2446B"
-					: "#FFFFFF";
+
+			// diff between current price and average price
+			const currentPrice = parseFloat(data.price);
+			const avgPrice = lastAverage.value[data.pair];
+			const diffPercent =
+				Math.abs((currentPrice - avgPrice) / avgPrice) * 100 * 50;
+
+			const brightness = Math.min(Math.max(diffPercent, 40), 100); // 将最低亮度提高到40
+
+			// adjust color by price
+			const hue = currentPrice > avgPrice ? 150 : 0; // 150 -> green, 0 -> red
+			colors.value[data.pair] = `hsl(${hue}, 50%, ${brightness}%)`;
 		});
 
 		EventsOn("crypto_pairs_changed", () => {
