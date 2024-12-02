@@ -1,6 +1,11 @@
 <template>
 	<div class="crypto-info">
-		<div :style="{ color: color }">{{ pair }}</div>
+		<div class="header">
+			<img
+				:src="cryptoIconURL"
+				:alt="pair.split('-')[0].toLowerCase() + ' icon'" />
+			<div :style="{ color: color }">{{ pair }}</div>
+		</div>
 		<div :style="{ color: color }">{{ price }} {{ trend }}</div>
 	</div>
 </template>
@@ -27,6 +32,12 @@
 		},
 	});
 
+	const cryptoIconURL = computed(() => {
+		return `/okx/cdn/oksupport/asset/currency/icon/${props.pair
+			.split("-")[0]
+			.toLowerCase()}.png`;
+	});
+
 	const color = computed(() => {
 		return props.color || "#000000";
 	});
@@ -43,10 +54,22 @@
 		text-align: center;
 	}
 
-	.crypto-info div:first-child {
+	.header {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		margin-bottom: 8px;
+	}
+
+	.header img {
+		width: 16px;
+		height: 16px;
+	}
+
+	.header div {
 		font-size: 16px;
 		font-weight: bold;
-		margin-bottom: 8px;
 	}
 
 	.crypto-info div:last-child {
