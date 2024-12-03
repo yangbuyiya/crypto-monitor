@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"sync"
 
 	"crypto-monitor/backend"
@@ -81,9 +82,19 @@ func (a *App) subscribeCryptoPrices(pairs []string) {
 
 		go func(pair string, ch <-chan public.EventTickers) {
 			for ticker := range ch {
+				last, _ := strconv.ParseFloat(ticker.Data[0].Last, 64)
+				sodUtc0, _ := strconv.ParseFloat(ticker.Data[0].SodUtc0, 64)
+				percentage := (last - sodUtc0) / sodUtc0 * 100
+				percentageStr := ""
+				if percentage > 0 {
+					percentageStr = fmt.Sprintf("+%.2f%%", percentage)
+				} else {
+					percentageStr = fmt.Sprintf("%.2f%%", percentage)
+				}
 				priceInfo := map[string]interface{}{
-					"pair":  pair,
-					"price": ticker.Data[0].Last,
+					"pair":       pair,
+					"price":      ticker.Data[0].Last,
+					"percentage": percentageStr,
 				}
 				runtime.EventsEmit(a.ctx, "ticker_update", priceInfo)
 			}

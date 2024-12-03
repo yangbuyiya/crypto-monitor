@@ -7,6 +7,7 @@
 				:price="prices[pair] || 'Loading...'"
 				:color="colors[pair] || '#FFFFFF'"
 				:trend="trend[pair] || ''"
+				:percentage="percentage[pair] || ''"
 				@dblclick="handleDoubleClick(pair)" />
 			<FontAwesomeIcon
 				icon="fa-solid fa-xmark"
@@ -43,6 +44,7 @@
 	const trend = ref({});
 	const lastAverage = ref({});
 	const period = ref(60);
+	const percentage = ref({});
 
 	// max difference ratio (50%)
 	const maxDiffRatio = 0.5;
@@ -158,6 +160,8 @@
 			} else {
 				trend.value[data.pair] = "";
 			}
+
+			percentage.value[data.pair] = data.percentage;
 		});
 
 		EventsOn("crypto_pairs_changed", () => {

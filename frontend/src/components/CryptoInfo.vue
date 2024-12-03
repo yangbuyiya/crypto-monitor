@@ -4,9 +4,18 @@
 			<img
 				:src="cryptoIconURL"
 				:alt="pair.split('-')[0].toLowerCase() + ' icon'" />
-			<div :style="{ color: color }">{{ pair }}</div>
+			<div>
+				{{ pair.split("-")[0] }}
+			</div>
+			<div
+				class="percentage"
+				:style="{ color: percentage.startsWith('+') ? '#99FF99' : '#FF9999' }">
+				{{ percentage }}
+			</div>
 		</div>
-		<div :style="{ color: color }">{{ price }} {{ trend }}</div>
+		<div class="price-info">
+			<div class="price" :style="{ color: color }">{{ price }} {{ trend }}</div>
+		</div>
 	</div>
 </template>
 
@@ -29,6 +38,10 @@
 		trend: {
 			type: String,
 			default: "",
+		},
+		percentage: {
+			type: String,
+			default: "0.00%",
 		},
 	});
 
@@ -70,6 +83,10 @@
 	.header div {
 		font-size: 16px;
 		font-weight: bold;
+	}
+
+	.percentage {
+		font-size: 14px !important;
 	}
 
 	.crypto-info div:last-child {
