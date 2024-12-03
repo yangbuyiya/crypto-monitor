@@ -1,21 +1,38 @@
 <template>
 	<div class="crypto-info-container">
-		<div class="crypto-info-item" v-for="pair in pairs" :key="pair">
-			<div class="icon-placeholder" v-if="showAddPair"></div>
-			<CryptoInfo
-				:pair="pair"
-				:price="prices[pair] || 'Loading...'"
-				:color="colors[pair] || '#FFFFFF'"
-				:trend="trend[pair] || ''"
-				:percentage="percentage[pair] || ''"
-				@dblclick="handleDoubleClick(pair)" />
-			<FontAwesomeIcon
-				icon="fa-solid fa-xmark"
-				color="red"
-				v-if="showAddPair"
-				@click="removePair(pair)"
-				aria-label="remove pair"
-				style="cursor: pointer" />
+		<div class="crypto-info-grid">
+			<div class="crypto-info-item" v-for="pair in paginatedPairs" :key="pair">
+				<CryptoInfo
+					:pair="pair"
+					:price="prices[pair] || 'Loading...'"
+					:color="colors[pair] || '#FFFFFF'"
+					:trend="trend[pair] || ''"
+					:percentage="percentage[pair] || ''"
+					@dblclick="handleDoubleClick(pair)" />
+				<div class="icon-placeholder" v-if="showAddPair"></div>
+				<FontAwesomeIcon
+					icon="fa-solid fa-xmark"
+					color="red"
+					v-if="showAddPair"
+					@click="removePair(pair)"
+					aria-label="remove pair"
+					style="cursor: pointer" />
+			</div>
+		</div>
+		<div class="pagination" v-if="totalPages > 1">
+			<button
+				class="page-button"
+				@click="currentPage--"
+				:disabled="currentPage === 1">
+				<FontAwesomeIcon icon="fa-solid fa-chevron-left" />
+			</button>
+			<span class="page-info">{{ currentPage }} / {{ totalPages }}</span>
+			<button
+				class="page-button"
+				@click="currentPage++"
+				:disabled="currentPage === totalPages">
+				<FontAwesomeIcon icon="fa-solid fa-chevron-right" />
+			</button>
 		</div>
 	</div>
 </template>
@@ -23,7 +40,7 @@
 <script setup>
 	import CryptoInfo from "./CryptoInfo.vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-	import { ref, onMounted } from "vue";
+	import { ref, onMounted, computed, watch } from "vue";
 	import {
 		EventsOn,
 		EventsEmit,
@@ -45,6 +62,25 @@
 	const lastAverage = ref({});
 	const period = ref(60);
 	const percentage = ref({});
+	const currentPage = ref(1);
+	const itemsPerPage = 3;
+
+	const totalPages = computed(() => {
+		return Math.ceil(pairs.value.length / itemsPerPage);
+	});
+
+	const paginatedPairs = computed(() => {
+		const start = (currentPage.value - 1) * itemsPerPage;
+		const end = start + itemsPerPage;
+		return pairs.value.slice(start, end);
+	});
+
+	watch(pairs, (newPairs) => {
+		const maxPage = Math.ceil(newPairs.length / itemsPerPage);
+		if (currentPage.value > maxPage) {
+			currentPage.value = Math.max(1, maxPage);
+		}
+	});
 
 	// max difference ratio (50%)
 	const maxDiffRatio = 0.5;
@@ -176,6 +212,14 @@
 		flex-direction: column;
 		gap: 10px;
 		padding: 5px;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.crypto-info-grid {
+		display: grid;
+		gap: 5px;
+		padding: 5px;
 	}
 
 	.crypto-info-item {
@@ -184,7 +228,29 @@
 		justify-content: center;
 	}
 
-	.icon-placeholder {
-		width: 16px;
+	.pagination {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		gap: 10px;
+		margin-top: 10px;
+	}
+
+	.page-button {
+		background: none;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		padding: 4px 8px;
+		cursor: pointer;
+		color: inherit;
+	}
+
+	.page-button:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.page-info {
+		font-size: 14px;
 	}
 </style>
