@@ -31,3 +31,50 @@ A simple cross-platform crypto monitor that monitors the price of crypto currenc
 
 - [wails](https://wails.io/)
 - [go-okx](https://github.com/iaping/go-okx)
+
+
+# 下载wails
+
+```bash
+
+# Windows (PowerShell)
+$env:GOPROXY = "https://goproxy.cn,direct"
+$env:GOSUMDB = "sum.golang.google.cn"
+$env:GO111MODULE = "on"
+
+# Windows (CMD)
+set GOPROXY=https://goproxy.cn,direct
+set GOSUMDB=sum.golang.google.cn
+set GO111MODULE=on
+
+# Linux/macOS
+export GOPROXY=https://goproxy.cn,direct
+export GOSUMDB=sum.golang.google.cn
+export GO111MODULE=on
+
+```
+
+# 安装 Go (1.21+)
+# 安装 Node.js (v18+)
+# 安装 Wails CLI
+go install github.com/wailsapp/wails/v2/cmd/wails@latest
+
+# 安装 Go 依赖
+go mod tidy
+
+# 进入前端目录安装依赖
+cd frontend
+npm install
+cd ..
+
+# 在项目根目录运行
+wails dev
+
+# Windows
+wails build -platform windows/amd64
+
+# macOS
+wails build -platform darwin/universal
+
+# Linux
+wails build -platform linux/amd64

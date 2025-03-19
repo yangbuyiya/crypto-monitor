@@ -8,8 +8,8 @@ import (
 
 	"crypto-monitor/backend"
 
-	"github.com/iaping/go-okx/ws/public"
-	"github.com/wailsapp/wails/v2/pkg/runtime"
+	"github.com/imping/go-okx/ws/public"
+	"github.com/mailmap/wails/v2/pkg/runtime"
 )
 
 // App struct
@@ -17,7 +17,15 @@ type App struct {
 	ctx             context.Context
 	subscribedPairs map[string]bool
 	mu              sync.Mutex
+	isCollapsed     bool    // 新增: 控制窗口是否收起
 }
+
+// 新增: 窗口收起时的宽度
+const (
+	CollapsedWidth  = 10
+	ExpandedWidth   = 160
+	WindowHeight    = 360
+)
 
 // NewApp creates a new App application struct
 func NewApp() *App {
@@ -26,11 +34,51 @@ func NewApp() *App {
 	}
 }
 
+// 新增: 初始化窗口位置
+func (a *App) initializeWindowPosition() {
+	screenWidth, _ := runtime.ScreenGetAll(a.ctx)
+	if len(screenWidth) > 0 {
+		primaryScreen := screenWidth[0]
+		// 将窗口放置在屏幕右侧
+		x := primaryScreen.Width - CollapsedWidth
+		y := (primaryScreen.Height - WindowHeight) / 2
+		
+		runtime.WindowSetPosition(a.ctx, x, y)
+		runtime.WindowSetSize(a.ctx, CollapsedWidth, WindowHeight)
+		a.isCollapsed = true
+	}
+}
+
+// 新增: 展开窗口
+func (a *App) expandWindow() {
+	if a.isCollapsed {
+		x, y := runtime.WindowGetPosition(a.ctx)
+		runtime.WindowSetPosition(a.ctx, x-(ExpandedWidth-CollapsedWidth), y)
+		runtime.WindowSetSize(a.ctx, ExpandedWidth, WindowHeight)
+		a.isCollapsed = false
+	}
+}
+
+// 新增: 收起窗口
+func (a *App) collapseWindow() {
+	if !a.isCollapsed {
+		x, y := runtime.WindowGetPosition(a.ctx)
+		runtime.WindowSetPosition(a.ctx, x+(ExpandedWidth-CollapsedWidth), y)
+		runtime.WindowSetSize(a.ctx, CollapsedWidth, WindowHeight)
+		a.isCollapsed = true
+	}
+}
+
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	runtime.EventsOn(ctx, "crypto_pairs_changed", a.handleCryptoPairsChanged)
+	// 初始化窗口位置
+	a.initializeWindowPosition()
+	// 监听鼠标进入/离开事件
+	runtime.EventsOn(ctx, "mouse_enter", func(...interface{}) { a.expandWindow() })
+	runtime.EventsOn(ctx, "mouse_leave", func(...interface{}) { a.collapseWindow() })
 }
 
 // handleCryptoPairsChanged 是包装后的事件处理函数

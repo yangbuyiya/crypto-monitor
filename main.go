@@ -6,6 +6,7 @@ import (
 	"github.com/wailsapp/wails/v2"
 	"github.com/wailsapp/wails/v2/pkg/options"
 	"github.com/wailsapp/wails/v2/pkg/options/assetserver"
+	"github.com/wailsapp/wails/v2/pkg/options/windows"
 )
 
 //go:embed all:frontend/dist
@@ -18,8 +19,8 @@ func main() {
 	// Create application with options
 	err := wails.Run(&options.App{
 		Title:  "crypto-monitor",
-		Width:  160,
-		Height: 360,
+		Width:  CollapsedWidth,
+		Height: WindowHeight,
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
@@ -28,7 +29,12 @@ func main() {
 		Bind: []interface{}{
 			app,
 		},
-		Frameless: true,
+		Frameless:     true,
+		AlwaysOnTop:   true,
+		Windows: &windows.Options{
+			WebviewIsTransparent: true,
+			WindowIsTranslucent: true,
+		},
 	})
 
 	if err != nil {
