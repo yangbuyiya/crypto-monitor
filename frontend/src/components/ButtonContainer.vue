@@ -3,6 +3,9 @@
 		<button class="icon-button" @click="handleEditPair" aria-label="add">
 			<FontAwesomeIcon icon="fa-solid fa-plus" />
 		</button>
+		<button class="icon-button" @click="handleSettings" aria-label="settings">
+			<FontAwesomeIcon icon="fa-solid fa-gear" />
+		</button>
 		<button class="icon-button" @click="hideWindow" aria-label="hide">
 			<FontAwesomeIcon icon="fa-solid fa-minus" />
 		</button>
@@ -17,10 +20,12 @@
 		</button>
 	</div>
 	<AddCryptoPair v-if="showAddPair" />
+	<Settings v-if="showSettings" />
 </template>
 
 <script setup>
 	import AddCryptoPair from "./AddCryptoPair.vue";
+	import Settings from "./Settings.vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	import { ref } from "vue";
 	import {
@@ -32,13 +37,20 @@
 
 	const isKeepOnTop = ref(false);
 	const showAddPair = ref(false);
+	const showSettings = ref(false);
 
 	// 定义事件发射
 	const emit = defineEmits(["toggle-add-pair"]);
 
 	function handleEditPair() {
 		showAddPair.value = !showAddPair.value;
+		showSettings.value = false;
 		emit("toggle-add-pair");
+	}
+
+	function handleSettings() {
+		showSettings.value = !showSettings.value;
+		showAddPair.value = false;
 	}
 
 	const hideWindow = () => {

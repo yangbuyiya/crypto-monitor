@@ -16,11 +16,21 @@
 </template>
 
 <script setup>
-	import { ref } from "vue";
+	import { ref, onMounted } from "vue";
 	import { EventsEmit } from "../../wailsjs/runtime/runtime";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 	const newPair = ref("");
 	const isError = ref(false);
+
+	onMounted(() => {
+		const storedPairs = JSON.parse(localStorage.getItem("cryptoPairs")) || [];
+		const defaultPairs = JSON.parse(localStorage.getItem("defaultCryptoPairs")) || ["BTC-USDT", "ETH-USDT", "SOL-USDT"];
+		
+		if (storedPairs.length === 0) {
+			localStorage.setItem("cryptoPairs", JSON.stringify(defaultPairs));
+			EventsEmit("crypto_pairs_changed", defaultPairs);
+		}
+	});
 
 	const addPair = () => {
 		if (newPair.value.trim() === "") {
