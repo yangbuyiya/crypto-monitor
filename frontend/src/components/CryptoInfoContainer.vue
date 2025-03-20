@@ -1,41 +1,46 @@
 <template>
 	<div class="crypto-info-container">
-		<div class="crypto-info-grid">
-			<div 
-				v-for="(pair, index) in paginatedPairs" 
-				:key="pair"
-				class="crypto-info-item"
-				:draggable="isDragging === index"
-				@mousedown="startLongPress(index)"
-				@mouseup="clearLongPress"
-				@mouseleave="clearLongPress"
-				@dragstart="handleDragStart($event, index)"
-				@dragover.prevent
-				@dragenter.prevent
-				@drop="handleDrop($event, index)"
-				@click.stop
-				:class="{ 
-					'dragging': draggedIndex === index,
-					'press-feedback': isPressing === index
-				}"
-			>
-				<CryptoInfo
-					:pair="pair"
-					:price="prices[pair] || 'Loading...'"
-					:color="colors[pair] || '#FFFFFF'"
-					:trend="trend[pair] || ''"
-					:percentage="percentage[pair] || ''"
-					@dblclick="handleDoubleClick(pair)" />
-				<div class="icon-placeholder" v-if="showAddPair"></div>
-				<FontAwesomeIcon
-					icon="fa-solid fa-xmark"
-					color="red"
-					v-if="showAddPair"
-					@click="removePair(pair)"
-					aria-label="remove pair"
-					style="cursor: pointer" />
+		<!-- 滚动区域 -->
+		<div class="scroll-container">
+			<div class="crypto-info-grid">
+				<div 
+					v-for="(pair, index) in paginatedPairs" 
+					:key="pair"
+					class="crypto-info-item"
+					:draggable="isDragging === index"
+					@mousedown="startLongPress(index)"
+					@mouseup="clearLongPress"
+					@mouseleave="clearLongPress"
+					@dragstart="handleDragStart($event, index)"
+					@dragover.prevent
+					@dragenter.prevent
+					@drop="handleDrop($event, index)"
+					@click.stop
+					:class="{ 
+						'dragging': draggedIndex === index,
+						'press-feedback': isPressing === index
+					}"
+				>
+					<CryptoInfo
+						:pair="pair"
+						:price="prices[pair] || 'Loading...'"
+						:color="colors[pair] || '#FFFFFF'"
+						:trend="trend[pair] || ''"
+						:percentage="percentage[pair] || ''"
+						@dblclick="handleDoubleClick(pair)" />
+					<div class="icon-placeholder" v-if="showAddPair"></div>
+					<FontAwesomeIcon
+						icon="fa-solid fa-xmark"
+						color="red"
+						v-if="showAddPair"
+						@click="removePair(pair)"
+						aria-label="remove pair"
+						style="cursor: pointer" />
+				</div>
 			</div>
 		</div>
+
+		<!-- 分页器 -->
 		<div class="pagination" v-if="totalPages > 1">
 			<button
 				class="page-button"
@@ -80,7 +85,7 @@
 	const period = ref(60);
 	const percentage = ref({});
 	const currentPage = ref(1);
-	const itemsPerPage = 3;
+	const itemsPerPage = 10;
 	const draggedIndex = ref(null);
 	const isDragging = ref(null);
 	const isPressing = ref(null);
@@ -317,17 +322,39 @@
 	.crypto-info-container {
 		display: flex;
 		flex-direction: column;
+		height: calc(100vh - 20px); /* 减去padding */
+		padding: 10px;
 		gap: 10px;
-		padding: 5px;
-		align-items: center;
-		justify-content: center;
+	}
+
+	.scroll-container {
+		flex: 1;
+		overflow-y: auto;
+		overflow-x: hidden;
+		/* 自定义滚动条样式 */
+		scrollbar-width: thin;
+		scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+	}
+
+	/* Webkit浏览器的滚动条样式 */
+	.scroll-container::-webkit-scrollbar {
+		width: 6px;
+	}
+
+	.scroll-container::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	.scroll-container::-webkit-scrollbar-thumb {
+		background-color: rgba(255, 255, 255, 0.3);
+		border-radius: 3px;
 	}
 
 	.crypto-info-grid {
-		display: grid;
-		gap: 5px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
 		padding: 5px;
-		min-height: 150px; /* 确保有足够的拖放空间 */
 	}
 
 	.crypto-info-item {
@@ -336,7 +363,9 @@
 		justify-content: center;
 		user-select: none;
 		transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
-		-webkit-app-region: no-drag; /* 禁用默认的窗口拖动 */
+		-webkit-app-region: no-drag;
+		padding: 8px;
+		border-radius: 4px;
 	}
 
 	.crypto-info-item.press-feedback {
@@ -348,15 +377,11 @@
 		opacity: 0.5;
 		transform: scale(0.95);
 		background-color: rgba(255, 255, 255, 0.15);
+		cursor: move;
 	}
 
-	/* 移除默认的移动光标，因为现在需要长按才能拖动 */
 	.crypto-info-item:not(.dragging) {
 		cursor: default;
-	}
-
-	.crypto-info-item.dragging {
-		cursor: move;
 	}
 
 	.pagination {
@@ -364,16 +389,24 @@
 		justify-content: center;
 		align-items: center;
 		gap: 10px;
-		margin-top: 10px;
+		padding: 10px 0;
+		background-color: rgba(0, 0, 0, 0.2);
+		border-radius: 4px;
+		margin-top: auto; /* 确保分页器始终在底部 */
 	}
 
 	.page-button {
 		background: none;
-		border: 1px solid #ccc;
+		border: 1px solid rgba(255, 255, 255, 0.3);
 		border-radius: 4px;
 		padding: 4px 8px;
 		cursor: pointer;
 		color: inherit;
+		transition: background-color 0.2s ease;
+	}
+
+	.page-button:hover:not(:disabled) {
+		background-color: rgba(255, 255, 255, 0.1);
 	}
 
 	.page-button:disabled {
@@ -383,5 +416,7 @@
 
 	.page-info {
 		font-size: 14px;
+		min-width: 50px;
+		text-align: center;
 	}
 </style>

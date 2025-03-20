@@ -28,7 +28,7 @@ type App struct {
 const (
 	CollapsedWidth  = 10
 	ExpandedWidth   = 160
-	WindowHeight    = 360
+	WindowHeight    = 500    // 增加窗口高度以适应更多内容
 	EdgeThreshold   = 20    // 新增：边缘检测阈值
 	CheckInterval   = 100 // 检查间隔（毫秒）
 )
