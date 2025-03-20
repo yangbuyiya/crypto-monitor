@@ -8,8 +8,8 @@ import (
 
 	"crypto-monitor/backend"
 
-	"github.com/imping/go-okx/ws/public"
-	"github.com/mailmap/wails/v2/pkg/runtime"
+	"github.com/iaping/go-okx/ws/public"
+	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 // App struct
