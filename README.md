@@ -65,16 +65,19 @@ go mod tidy
 # 进入前端目录安装依赖
 cd frontend
 npm install
+npm run build
 cd ..
 
 # 在项目根目录运行
 wails dev
 
-# Windows
+# 打包
+
+## Windows
 wails build -platform windows/amd64
 
-# macOS
+## macOS
 wails build -platform darwin/universal
 
-# Linux
+## Linux
 wails build -platform linux/amd64
