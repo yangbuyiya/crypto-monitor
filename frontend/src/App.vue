@@ -3,19 +3,13 @@
 	import { onMounted, onUnmounted } from 'vue';
 	import { EventsEmit } from "../wailsjs/runtime/runtime";
 
-	let mouseLeaveTimer;
-
 	onMounted(() => {
 		const handleMouseEnter = () => {
-			clearTimeout(mouseLeaveTimer);
 			EventsEmit("mouse_enter");
 		};
 
 		const handleMouseLeave = () => {
-			// 添加延迟，避免鼠标快速移动时的闪烁
-			mouseLeaveTimer = setTimeout(() => {
-				EventsEmit("mouse_leave");
-			}, 300);
+			EventsEmit("mouse_leave");
 		};
 
 		document.addEventListener('mouseenter', handleMouseEnter);
@@ -24,7 +18,6 @@
 		onUnmounted(() => {
 			document.removeEventListener('mouseenter', handleMouseEnter);
 			document.removeEventListener('mouseleave', handleMouseLeave);
-			clearTimeout(mouseLeaveTimer);
 		});
 	});
 </script>
@@ -52,6 +45,5 @@
 		height: 100vh;
 		text-align: center;
 		overflow: hidden;
-		transition: width 0.3s ease;  /* 添加过渡动画 */
 	}
 </style>
