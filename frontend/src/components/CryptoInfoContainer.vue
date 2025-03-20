@@ -1,7 +1,24 @@
 <template>
 	<div class="crypto-info-container">
 		<div class="crypto-info-grid">
-			<div class="crypto-info-item" v-for="pair in paginatedPairs" :key="pair">
+			<div 
+				v-for="(pair, index) in paginatedPairs" 
+				:key="pair"
+				class="crypto-info-item"
+				:draggable="isDragging === index"
+				@mousedown="startLongPress(index)"
+				@mouseup="clearLongPress"
+				@mouseleave="clearLongPress"
+				@dragstart="handleDragStart($event, index)"
+				@dragover.prevent
+				@dragenter.prevent
+				@drop="handleDrop($event, index)"
+				@click.stop
+				:class="{ 
+					'dragging': draggedIndex === index,
+					'press-feedback': isPressing === index
+				}"
+			>
 				<CryptoInfo
 					:pair="pair"
 					:price="prices[pair] || 'Loading...'"
@@ -40,7 +57,7 @@
 <script setup>
 	import CryptoInfo from "./CryptoInfo.vue";
 	import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
-	import { ref, onMounted, computed, watch } from "vue";
+	import { ref, onMounted, computed, watch, onUnmounted } from "vue";
 	import {
 		EventsOn,
 		EventsEmit,
@@ -64,6 +81,11 @@
 	const percentage = ref({});
 	const currentPage = ref(1);
 	const itemsPerPage = 3;
+	const draggedIndex = ref(null);
+	const isDragging = ref(null);
+	const isPressing = ref(null);
+	let longPressTimer = null;
+	const LONG_PRESS_DURATION = 200; // 长按触发时间（毫秒）
 
 	const totalPages = computed(() => {
 		return Math.ceil(pairs.value.length / itemsPerPage);
@@ -167,6 +189,86 @@
 		EventsEmit("crypto_pairs_changed", updatedPairs);
 	};
 
+	// 开始长按
+	const startLongPress = (index) => {
+		clearLongPress();
+		isPressing.value = index;
+		EventsEmit("set_dragging", true);
+		
+		// 阻止事件冒泡
+		event.stopPropagation();
+		
+		longPressTimer = setTimeout(() => {
+			isDragging.value = index;
+			const event = new MouseEvent('dragstart', {
+				bubbles: true,
+				cancelable: true,
+				view: window
+			});
+			const element = document.querySelector(`.crypto-info-item:nth-child(${index + 1})`);
+			if (element) {
+				element.dispatchEvent(event);
+			}
+		}, LONG_PRESS_DURATION);
+	};
+
+	// 清除长按状态
+	const clearLongPress = () => {
+		if (longPressTimer) {
+			clearTimeout(longPressTimer);
+			longPressTimer = null;
+		}
+		isPressing.value = null;
+		if (!draggedIndex.value) {
+			isDragging.value = null;
+		}
+		// 通知后端恢复窗口拖动
+		EventsEmit("set_dragging", false);
+	};
+
+	// 处理拖动开始
+	const handleDragStart = (e, index) => {
+		draggedIndex.value = index;
+		isDragging.value = index;
+		e.dataTransfer.effectAllowed = 'move';
+	};
+
+	// 处理放置
+	const handleDrop = (e, dropIndex) => {
+		e.preventDefault();
+		if (draggedIndex.value === null || draggedIndex.value === dropIndex) {
+			clearLongPress();
+			isDragging.value = null;
+			draggedIndex.value = null;
+			// 确保恢复窗口拖动
+			EventsEmit("set_dragging", false);
+			return;
+		}
+
+		// 获取当前所有交易对
+		const allPairs = [...pairs.value];
+		
+		// 计算实际的索引（考虑分页）
+		const actualDragIndex = (currentPage.value - 1) * itemsPerPage + draggedIndex.value;
+		const actualDropIndex = (currentPage.value - 1) * itemsPerPage + dropIndex;
+		
+		// 交换位置
+		const temp = allPairs[actualDragIndex];
+		allPairs[actualDragIndex] = allPairs[actualDropIndex];
+		allPairs[actualDropIndex] = temp;
+
+		// 更新存储和状态
+		localStorage.setItem("cryptoPairs", JSON.stringify(allPairs));
+		pairs.value = allPairs;
+		EventsEmit("crypto_pairs_changed", allPairs);
+		
+		clearLongPress();
+		isDragging.value = null;
+		draggedIndex.value = null;
+		// 确保恢复窗口拖动
+		EventsEmit("set_dragging", false);
+	};
+
 	onMounted(() => {
 		loadPairsFromStorage();
 
@@ -204,6 +306,11 @@
 			loadPairsFromStorage();
 		});
 	});
+
+	onUnmounted(() => {
+		clearLongPress();
+		EventsEmit("set_dragging", false);
+	});
 </script>
 
 <style scoped>
@@ -220,12 +327,36 @@
 		display: grid;
 		gap: 5px;
 		padding: 5px;
+		min-height: 150px; /* 确保有足够的拖放空间 */
 	}
 
 	.crypto-info-item {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		user-select: none;
+		transition: transform 0.2s ease, opacity 0.2s ease, background-color 0.2s ease;
+		-webkit-app-region: no-drag; /* 禁用默认的窗口拖动 */
+	}
+
+	.crypto-info-item.press-feedback {
+		background-color: rgba(255, 255, 255, 0.1);
+		transform: scale(0.98);
+	}
+
+	.crypto-info-item.dragging {
+		opacity: 0.5;
+		transform: scale(0.95);
+		background-color: rgba(255, 255, 255, 0.15);
+	}
+
+	/* 移除默认的移动光标，因为现在需要长按才能拖动 */
+	.crypto-info-item:not(.dragging) {
+		cursor: default;
+	}
+
+	.crypto-info-item.dragging {
+		cursor: move;
 	}
 
 	.pagination {

@@ -21,6 +21,7 @@ type App struct {
 	isCollapsed     bool    // 新增: 控制窗口是否收起
 	isLeftSide      bool    // 新增：标记窗口是在左侧还是右侧
 	isAtEdge        bool    // 新增：标记是否在屏幕边缘
+	isDragging      bool    // 新增：标记是否在拖动状态
 }
 
 // 新增: 窗口收起时的宽度
@@ -41,6 +42,11 @@ func NewApp() *App {
 
 // 检查窗口是否在边缘
 func (a *App) checkEdgePosition() bool {
+	// 如果正在拖动，不进行边缘检测
+	if a.isDragging {
+		return false
+	}
+
 	screens, _ := runtime.ScreenGetAll(a.ctx)
 	if len(screens) == 0 {
 		return false
@@ -116,11 +122,34 @@ func (a *App) collapseWindow() {
 	a.isCollapsed = true
 }
 
+// 新增：设置拖动状态
+func (a *App) SetDragging(dragging bool) {
+	a.isDragging = dragging
+	if dragging {
+		// 在拖动时暂停边缘检测
+		a.isAtEdge = false
+		// 如果窗口是收起的，则展开
+		if a.isCollapsed {
+			a.expandWindow()
+		}
+	} else {
+		// 恢复边缘检测
+		a.checkEdgePosition()
+	}
+}
+
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	runtime.EventsOn(ctx, "crypto_pairs_changed", a.handleCryptoPairsChanged)
+	runtime.EventsOn(ctx, "set_dragging", func(optionalData ...interface{}) {
+		if len(optionalData) > 0 {
+			if dragging, ok := optionalData[0].(bool); ok {
+				a.SetDragging(dragging)
+			}
+		}
+	})
 	
 	// 初始化时检查位置
 	a.checkEdgePosition()
